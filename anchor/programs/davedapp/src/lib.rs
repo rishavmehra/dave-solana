@@ -6,65 +6,99 @@ declare_id!("coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF");
 
 #[program]
 pub mod davedapp {
-    use super::*;
+  use super::*;
 
-  pub fn close(_ctx: Context<CloseDavedapp>) -> Result<()> {
+  pub fn initilise_notes(
+    ctx: Context<InitialiseNotes>,
+    title: String,
+    message: String,
+  ) -> Result<()>{
+    let notes = &mut ctx.accounts.notes;
+    notes.owner = *ctx.accounts.signer.key;
+    notes.title = title;
+    notes.message = message;
     Ok(())
   }
 
-  pub fn decrement(ctx: Context<Update>) -> Result<()> {
-    ctx.accounts.davedapp.count = ctx.accounts.davedapp.count.checked_sub(1).unwrap();
+  pub fn initilise_update_notes(
+    ctx: Context<InitialiseUpdateNotes>,
+    _title: String,
+    message: String,
+  ) -> Result<()> {
+    let notes = &mut *ctx.accounts.notes;
+    notes.message =message;
     Ok(())
   }
 
-  pub fn increment(ctx: Context<Update>) -> Result<()> {
-    ctx.accounts.davedapp.count = ctx.accounts.davedapp.count.checked_add(1).unwrap();
-    Ok(())
-  }
-
-  pub fn initialize(_ctx: Context<InitializeDavedapp>) -> Result<()> {
-    Ok(())
-  }
-
-  pub fn set(ctx: Context<Update>, value: u8) -> Result<()> {
-    ctx.accounts.davedapp.count = value.clone();
+  pub fn initilise_delete_notes(
+    _ctx: Context<InitialiseDeleteNotes>,
+    _title: String,
+  ) -> Result<()> {
     Ok(())
   }
 }
 
+
 #[derive(Accounts)]
-pub struct InitializeDavedapp<'info> {
+#[instruction(title:String)]
+pub struct InitialiseUpdateNotes<'info>{
   #[account(mut)]
-  pub payer: Signer<'info>,
+  pub signer: Signer<'info>,
 
   #[account(
-  init,
-  space = 8 + Davedapp::INIT_SPACE,
-  payer = payer
+    mut,
+    realloc = 8 + Notes::INIT_SPACE,
+    realloc::payer = signer,
+    realloc::zero = true,
+    seeds = [title.as_ref(), signer.key.as_ref()],
+    bump
   )]
-  pub davedapp: Account<'info, Davedapp>,
+  pub notes: Account<'info, Notes>,
+
+  pub system_program: Program<'info, System>
+}
+
+#[derive(Accounts)]
+#[instruction(title:String)]
+pub struct InitialiseDeleteNotes<'info> {
+  #[account(mut)]
+  pub signer: Signer<'info>,
+
+  #[account(
+    mut,
+    seeds = [title.as_bytes(), signer.key.as_ref()],
+    bump,
+    close = signer
+  )]
+  pub notes: Account<'info, Notes>,
+
+  pub system_program: Program<'info, System>
+}
+
+#[derive(Accounts)]
+#[instruction(title: String)]
+pub struct  InitialiseNotes<'info>{
+  #[account(mut)]
+  pub signer: Signer<'info>,
+
+  #[account(
+    init,
+    payer = signer,
+    space = 8 + Notes::INIT_SPACE,
+    seeds = [title.as_bytes(), signer.key.as_ref()],
+    bump
+  )]
+  pub notes :Account<'info,   Notes>,
+
   pub system_program: Program<'info, System>,
-}
-#[derive(Accounts)]
-pub struct CloseDavedapp<'info> {
-  #[account(mut)]
-  pub payer: Signer<'info>,
-
-  #[account(
-  mut,
-  close = payer, // close account and return lamports to payer
-  )]
-  pub davedapp: Account<'info, Davedapp>,
-}
-
-#[derive(Accounts)]
-pub struct Update<'info> {
-  #[account(mut)]
-  pub davedapp: Account<'info, Davedapp>,
-}
+} 
 
 #[account]
 #[derive(InitSpace)]
-pub struct Davedapp {
-  count: u8,
+pub struct Notes{
+  owner: Pubkey,
+  #[max_len(50)]
+  title: String,
+  #[max_len(500)]
+  message: String
 }

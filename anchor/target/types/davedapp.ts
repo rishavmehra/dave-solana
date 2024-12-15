@@ -14,150 +14,88 @@ export type Davedapp = {
   },
   "instructions": [
     {
-      "name": "close",
+      "name": "initiliseNotes",
       "discriminator": [
-        98,
-        165,
-        201,
+        212,
+        37,
+        56,
+        245,
         177,
-        108,
-        65,
-        206,
-        96
+        100,
+        238,
+        213
       ],
       "accounts": [
         {
-          "name": "payer",
+          "name": "signer",
           "writable": true,
           "signer": true
         },
         {
-          "name": "davedapp",
-          "writable": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "decrement",
-      "discriminator": [
-        106,
-        227,
-        168,
-        59,
-        248,
-        27,
-        150,
-        101
-      ],
-      "accounts": [
-        {
-          "name": "davedapp",
-          "writable": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "increment",
-      "discriminator": [
-        11,
-        18,
-        104,
-        9,
-        104,
-        174,
-        59,
-        33
-      ],
-      "accounts": [
-        {
-          "name": "davedapp",
-          "writable": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "initialize",
-      "discriminator": [
-        175,
-        175,
-        109,
-        31,
-        13,
-        152,
-        155,
-        237
-      ],
-      "accounts": [
-        {
-          "name": "payer",
+          "name": "notes",
           "writable": true,
-          "signer": true
-        },
-        {
-          "name": "davedapp",
-          "writable": true,
-          "signer": true
+          "pda": {
+            "seeds": [
+              {
+                "kind": "arg",
+                "path": "title"
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
         },
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": []
-    },
-    {
-      "name": "set",
-      "discriminator": [
-        198,
-        51,
-        53,
-        241,
-        116,
-        29,
-        126,
-        194
-      ],
-      "accounts": [
-        {
-          "name": "davedapp",
-          "writable": true
-        }
-      ],
       "args": [
         {
-          "name": "value",
-          "type": "u8"
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "message",
+          "type": "string"
         }
       ]
     }
   ],
   "accounts": [
     {
-      "name": "davedapp",
+      "name": "notes",
       "discriminator": [
-        255,
-        176,
-        4,
-        245,
-        188,
-        253,
-        124,
-        25
+        105,
+        126,
+        200,
+        34,
+        252,
+        93,
+        84,
+        168
       ]
     }
   ],
   "types": [
     {
-      "name": "davedapp",
+      "name": "notes",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "count",
-            "type": "u8"
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "message",
+            "type": "string"
           }
         ]
       }
