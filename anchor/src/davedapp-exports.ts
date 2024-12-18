@@ -21,7 +21,7 @@ export function getDavedappProgramId(cluster: Cluster) {
     case 'devnet':
     case 'testnet':
       // This is the program ID for the Davedapp program on devnet and testnet.
-      return new PublicKey('coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF')
+      return new PublicKey('8YYuqymgo5tKBuxHgC764CjXGPX7EMnBN1ZehbntqwcN')
     case 'mainnet-beta':
     default:
       return DAVEDAPP_PROGRAM_ID

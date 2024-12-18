@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-davedapp = "E4W4iSXPdmLGzoFfFX39eoV29GqdvosiqTpKTuEdRw77"
+davedapp = "8YYuqymgo5tKBuxHgC764CjXGPX7EMnBN1ZehbntqwcN"
 
 [registry]
 url = "https://api.apr.dev"
