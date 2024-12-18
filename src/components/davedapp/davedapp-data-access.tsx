@@ -9,6 +9,14 @@ import toast from 'react-hot-toast'
 import { useCluster } from '../cluster/cluster-data-access'
 import { useAnchorProvider } from '../solana/solana-provider'
 import { useTransactionToast } from '../ui/ui-layout'
+import { title } from 'process'
+import { rpc } from '@coral-xyz/anchor/dist/cjs/utils'
+
+interface CreateNotesArgs {
+  title: string;
+  message: string;
+  owner: PublicKey;
+}
 
 export function useDavedappProgram() {
   const { connection } = useConnection()
@@ -20,31 +28,38 @@ export function useDavedappProgram() {
 
   const accounts = useQuery({
     queryKey: ['davedapp', 'all', { cluster }],
-    queryFn: () => program.account.davedapp.all(),
+    queryFn: () => program.account.notes.all(),
   })
 
   const getProgramAccount = useQuery({
     queryKey: ['get-program-account', { cluster }],
     queryFn: () => connection.getParsedAccountInfo(programId),
   })
-
-  const initialize = useMutation({
-    mutationKey: ['davedapp', 'initialize', { cluster }],
-    mutationFn: (keypair: Keypair) =>
-      program.methods.initialize().accounts({ davedapp: keypair.publicKey }).signers([keypair]).rpc(),
-    onSuccess: (signature) => {
-      transactionToast(signature)
-      return accounts.refetch()
+  
+  const createEntry  = useMutation<string, Error, CreateNotesArgs>({
+    mutationKey: ['notes', 'create', { cluster }],
+    mutationFn: async({title, message, owner }) =>{
+      const [noteEntryAddress] = await PublicKey.findProgramAddressSync(
+        [Buffer.from(title), owner.toBuffer()],
+        programId
+      );
+      return program.methods.initiliseNotes(title, message).rpc();
     },
-    onError: () => toast.error('Failed to initialize account'),
-  })
+    onSuccess: (signature) =>{
+      transactionToast(signature);
+      accounts.refetch();
+    },
+    onError(error) {
+      toast.error(`error creating entry: ${error.message}`)
+    }
+  });
 
   return {
     program,
-    programId,
     accounts,
+    programId,
     getProgramAccount,
-    initialize,
+    createEntry
   }
 }
 
@@ -55,50 +70,36 @@ export function useDavedappProgramAccount({ account }: { account: PublicKey }) {
 
   const accountQuery = useQuery({
     queryKey: ['davedapp', 'fetch', { cluster, account }],
-    queryFn: () => program.account.davedapp.fetch(account),
+    queryFn: () => program.account.notes.fetch(account),
   })
 
-  const closeMutation = useMutation({
-    mutationKey: ['davedapp', 'close', { cluster, account }],
-    mutationFn: () => program.methods.close().accounts({ davedapp: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accounts.refetch()
+  const updateEntry = useMutation<string, Error, CreateNotesArgs>({
+    mutationKey: ["UpdateNotes", "update", {cluster}],
+    mutationFn: async ({title, message}) => {
+      return program.methods.initiliseUpdateNotes(title, message).rpc();
     },
+  onSuccess: (signature) =>{
+    transactionToast(signature)
+    accounts.refetch();
+  },
+  onError: (error) => {
+    toast.error(`Failed `)
+  }
   })
 
-  const decrementMutation = useMutation({
-    mutationKey: ['davedapp', 'decrement', { cluster, account }],
-    mutationFn: () => program.methods.decrement().accounts({ davedapp: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accountQuery.refetch()
-    },
-  })
-
-  const incrementMutation = useMutation({
-    mutationKey: ['davedapp', 'increment', { cluster, account }],
-    mutationFn: () => program.methods.increment().accounts({ davedapp: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accountQuery.refetch()
-    },
-  })
-
-  const setMutation = useMutation({
-    mutationKey: ['davedapp', 'set', { cluster, account }],
-    mutationFn: (value: number) => program.methods.set(value).accounts({ davedapp: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accountQuery.refetch()
-    },
+  const deleteEntry = useMutation({
+    mutationKey: ["UpdateNotes", "delete", {cluster, account}],
+    mutationFn: (title: string) =>
+      program.methods.initiliseDeleteNotes(title).rpc(),
+    onSuccess: (tx) =>{
+      transactionToast(tx);
+      return accounts.refetch();
+    }
   })
 
   return {
     accountQuery,
-    closeMutation,
-    decrementMutation,
-    incrementMutation,
-    setMutation,
+    updateEntry,
+    deleteEntry,
   }
 }
